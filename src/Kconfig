@@ -35,6 +35,30 @@ config SERIAL_BAUD
         Specify the baud rate of the serial port. This should be set
         to 250000. Read the FAQ before changing this value.
 
+# Generic configuration option for the serial mux
+config MUX_SERIAL
+    bool "Serial mux: address this console in a shared byte stream"
+    depends on SERIAL && HAVE_CHIPID
+    help
+        Make this build's serial console speak the serial mux: answer a scan
+        with this device's identity, adopt the node id it is handed, head its
+        own frames with the reply header, and handle an id collision the way
+        the CAN code does (src/mux.c). A unit is a checked two-byte address
+        header in front of one unmodified frame, which is what lets a host
+        address this gate among several on one byte stream - and flash it
+        through a tunnel unit.
+
+        Off by default, on purpose. With it the console's wire format is
+        units, and units are not what upstream katapult's flashtool speaks, so
+        only a deployment that reaches this board through a bridge should ever
+        turn it on; on the upstream tool a board with it on is not reachable.
+
+        Needs an identity to answer a scan with: it is derived from the chip id
+        (src/generic/mux_chipid.c, HAVE_CHIPID) and is the same six bytes this
+        board's CAN uuid is. Only the generic serial console is wired for the
+        carriers this build has; the USB CDC console is not, so a USBSERIAL
+        build is not offered this option.
+
 # Generic configuration options for USB
 config USBSERIAL
     bool
